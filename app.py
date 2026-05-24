@@ -1,10 +1,9 @@
-import io
 import os
 from datetime import datetime
 
 import pandas as pd
 from dotenv import load_dotenv
-from flask import Flask, flash, redirect, render_template, request, send_file, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for
 from supabase import create_client
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"), override=True)
@@ -250,49 +249,6 @@ def submit():
     return redirect(url_for("index", role=role))
 
 
-@app.route("/download")
-def download_csv():
-    """Download semua data dari Supabase sebagai file CSV."""
-    try:
-        sb = get_supabase()
-        response = sb.table(TABLE_NAME).select("*").execute()
-        data = response.data or []
-    except Exception as e:
-        flash(f"Gagal mengambil data: {str(e)}", "danger")
-        return redirect(url_for("index"))
-
-    if not data:
-        flash("Belum ada data untuk diunduh.", "warning")
-        return redirect(url_for("index"))
-
-    # Susun kolom sesuai format lama
-    kolom = ["nama", "role", "tanggal"] + [f"p{i}" for i in range(1, 21)]
-    df = pd.DataFrame(data)
-
-    # Hanya ambil kolom yang relevan (abaikan id, created_at, dll)
-    kolom_ada = [k for k in kolom if k in df.columns]
-    df = df[kolom_ada]
-
-    # Rename ke format header asli (kapital)
-    rename_map = {"nama": "Nama", "role": "Role", "tanggal": "Tanggal"}
-    for i in range(1, 21):
-        rename_map[f"p{i}"] = f"P{i}"
-    df.rename(columns=rename_map, inplace=True)
-
-    # Kirim sebagai file CSV in-memory
-    buffer = io.StringIO()
-    df.to_csv(buffer, index=False, encoding="utf-8")
-    buffer.seek(0)
-
-    mem = io.BytesIO(buffer.getvalue().encode("utf-8"))
-    mem.seek(0)
-
-    return send_file(
-        mem,
-        as_attachment=True,
-        download_name="database_kuesioner.csv",
-        mimetype="text/csv",
-    )
 
 
 if __name__ == "__main__":
