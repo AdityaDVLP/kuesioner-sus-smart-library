@@ -1,16 +1,42 @@
+import io
 import os
-import time
 from datetime import datetime
 
 import pandas as pd
+from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, send_file, url_for
+from supabase import create_client
+
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ganti-dengan-string-rahasia-untuk-production")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_FILE = os.path.join(BASE_DIR, "database_kuesioner.csv")
+# ---------------------------------------------------------------------------
+# Supabase config
+# ---------------------------------------------------------------------------
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+TABLE_NAME = "data_kuesionerblackbox"
 
+_supabase_client = None
+
+
+def get_supabase():
+    """Return a cached Supabase client (singleton)."""
+    global _supabase_client
+    if _supabase_client is None:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            raise RuntimeError(
+                "SUPABASE_URL dan SUPABASE_KEY harus diset di environment variables."
+            )
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    return _supabase_client
+
+
+# ---------------------------------------------------------------------------
+# Skala, Aspek, dan Pertanyaan (tidak berubah)
+# ---------------------------------------------------------------------------
 SKALA_LABEL = {
     1: "Sangat Tidak Setuju",
     2: "Tidak Setuju",
@@ -97,21 +123,24 @@ def build_aspek_groups(pertanyaan_list):
     return groups
 
 
+# ---------------------------------------------------------------------------
+# Supabase helpers
+# ---------------------------------------------------------------------------
 def hitung_statistik(filter_role=None):
-    if not os.path.exists(CSV_FILE):
-        return {"total": 0, "mahasiswa": 0, "pustakawan": 0}
-
+    """Baca data dari Supabase dan hitung jumlah responden per role."""
     try:
-        df = pd.read_csv(CSV_FILE)
+        sb = get_supabase()
+        response = sb.table(TABLE_NAME).select("role").execute()
+        data = response.data or []
     except Exception:
         return {"total": 0, "mahasiswa": 0, "pustakawan": 0}
 
-    if df.empty or "Role" not in df.columns:
+    if not data:
         return {"total": 0, "mahasiswa": 0, "pustakawan": 0}
 
-    total = len(df)
-    mahasiswa = len(df[df["Role"] == "Mahasiswa"])
-    pustakawan = len(df[df["Role"] == "Pustakawan"])
+    mahasiswa = sum(1 for row in data if row.get("role") == "Mahasiswa")
+    pustakawan = sum(1 for row in data if row.get("role") == "Pustakawan")
+    total = len(data)
 
     if filter_role == "Mahasiswa":
         total = mahasiswa
@@ -121,36 +150,28 @@ def hitung_statistik(filter_role=None):
     return {"total": total, "mahasiswa": mahasiswa, "pustakawan": pustakawan}
 
 
-def simpan_ke_csv(data_dict):
-    kolom = ["Nama", "Role", "Tanggal"] + [f"P{i}" for i in range(1, 21)]
-    df_baru = pd.DataFrame([data_dict], columns=kolom)
-    file_ada = os.path.exists(CSV_FILE)
-    max_retry = 5
+def simpan_ke_supabase(data_dict):
+    """Insert satu baris data kuesioner ke Supabase."""
+    try:
+        sb = get_supabase()
+        # Supabase column names are lowercase
+        row = {
+            "nama": data_dict["Nama"],
+            "role": data_dict["Role"],
+            "tanggal": data_dict["Tanggal"],
+        }
+        for i in range(1, 21):
+            row[f"p{i}"] = data_dict[f"P{i}"]
 
-    for percobaan in range(max_retry):
-        try:
-            df_baru.to_csv(
-                CSV_FILE,
-                mode="a",
-                header=not file_ada,
-                index=False,
-                encoding="utf-8",
-            )
-            return True, "Data berhasil disimpan."
-        except PermissionError:
-            if percobaan < max_retry - 1:
-                time.sleep(0.3)
-                continue
-            return (
-                False,
-                "File sedang digunakan. Tutup database_kuesioner.csv di Excel lalu coba lagi.",
-            )
-        except Exception as e:
-            return False, f"Gagal menyimpan data: {str(e)}"
-
-    return False, "Gagal menyimpan setelah beberapa percobaan."
+        sb.table(TABLE_NAME).insert(row).execute()
+        return True, "Data berhasil disimpan."
+    except Exception as e:
+        return False, f"Gagal menyimpan data: {str(e)}"
 
 
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 @app.route("/")
 def index():
     role = request.args.get("role", "Mahasiswa")
@@ -212,7 +233,7 @@ def submit():
     data = {"Nama": nama, "Role": role, "Tanggal": tanggal, **jawaban}
 
     try:
-        berhasil, pesan = simpan_ke_csv(data)
+        berhasil, pesan = simpan_ke_supabase(data)
         if berhasil:
             flash("Terima kasih. Kuesioner berhasil dikirim.", "success")
         else:
@@ -225,26 +246,48 @@ def submit():
 
 @app.route("/download")
 def download_csv():
-    if not os.path.exists(CSV_FILE):
+    """Download semua data dari Supabase sebagai file CSV."""
+    try:
+        sb = get_supabase()
+        response = sb.table(TABLE_NAME).select("*").execute()
+        data = response.data or []
+    except Exception as e:
+        flash(f"Gagal mengambil data: {str(e)}", "danger")
+        return redirect(url_for("index"))
+
+    if not data:
         flash("Belum ada data untuk diunduh.", "warning")
         return redirect(url_for("index"))
 
+    # Susun kolom sesuai format lama
+    kolom = ["nama", "role", "tanggal"] + [f"p{i}" for i in range(1, 21)]
+    df = pd.DataFrame(data)
+
+    # Hanya ambil kolom yang relevan (abaikan id, created_at, dll)
+    kolom_ada = [k for k in kolom if k in df.columns]
+    df = df[kolom_ada]
+
+    # Rename ke format header asli (kapital)
+    rename_map = {"nama": "Nama", "role": "Role", "tanggal": "Tanggal"}
+    for i in range(1, 21):
+        rename_map[f"p{i}"] = f"P{i}"
+    df.rename(columns=rename_map, inplace=True)
+
+    # Kirim sebagai file CSV in-memory
+    buffer = io.StringIO()
+    df.to_csv(buffer, index=False, encoding="utf-8")
+    buffer.seek(0)
+
+    mem = io.BytesIO(buffer.getvalue().encode("utf-8"))
+    mem.seek(0)
+
     return send_file(
-        CSV_FILE,
+        mem,
         as_attachment=True,
         download_name="database_kuesioner.csv",
         mimetype="text/csv",
     )
 
-
-def ensure_csv_exists():
-    if os.path.exists(CSV_FILE):
-        return
-    kolom = ["Nama", "Role", "Tanggal"] + [f"P{i}" for i in range(1, 21)]
-    pd.DataFrame(columns=kolom).to_csv(CSV_FILE, index=False, encoding="utf-8")
-
-
-ensure_csv_exists()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
