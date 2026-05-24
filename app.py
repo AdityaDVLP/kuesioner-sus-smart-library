@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from flask import Flask, flash, redirect, render_template, request, send_file, url_for
 from supabase import create_client
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"), override=True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ganti-dengan-string-rahasia-untuk-production")
@@ -15,8 +15,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "ganti-dengan-string-rahasia-untuk
 # ---------------------------------------------------------------------------
 # Supabase config
 # ---------------------------------------------------------------------------
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 TABLE_NAME = "data_kuesionerblackbox"
 
 _supabase_client = None
@@ -26,12 +24,20 @@ def get_supabase():
     """Return a cached Supabase client (singleton)."""
     global _supabase_client
     if _supabase_client is None:
-        if not SUPABASE_URL or not SUPABASE_KEY:
+        url = os.environ.get("SUPABASE_URL", "")
+        key = os.environ.get("SUPABASE_KEY", "")
+        if not url or not key:
+            # Coba load ulang .env jika belum terbaca
+            load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"), override=True)
+            url = os.environ.get("SUPABASE_URL", "")
+            key = os.environ.get("SUPABASE_KEY", "")
+        if not url or not key:
             raise RuntimeError(
                 "SUPABASE_URL dan SUPABASE_KEY harus diset di environment variables."
             )
-        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        _supabase_client = create_client(url, key)
     return _supabase_client
+
 
 
 # ---------------------------------------------------------------------------
