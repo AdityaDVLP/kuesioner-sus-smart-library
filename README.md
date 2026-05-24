@@ -46,9 +46,11 @@ python app.py
 
 ## Cara Deploy ke Render.com
 
-1. Push folder `project` ke repository GitHub.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/AdityaDVLP/kuesioner-sus-smart-library)
 
-2. Di [Render](https://render.com), buat **New Web Service** dan pilih repository.
+1. Repository GitHub: https://github.com/AdityaDVLP/kuesioner-sus-smart-library
+
+2. Klik tombol **Deploy to Render** di atas (atau buat **New Web Service** / **New Blueprint** di dashboard).
 
 3. Pengaturan:
    - **Environment:** Python 3
