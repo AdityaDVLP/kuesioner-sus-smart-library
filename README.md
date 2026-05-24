@@ -61,3 +61,36 @@ python app.py
 5. Klik **Deploy**.
 
 **Catatan:** Filesystem di Render tidak permanen. Data CSV bisa hilang saat redeploy. Untuk penyimpanan jangka panjang, gunakan Persistent Disk di Render atau backup CSV secara berkala.
+
+## Cara Deploy ke Railway.app
+
+### Prasyarat (sekali, di PowerShell interaktif)
+
+```powershell
+railway login
+gh auth login
+```
+
+### Otomatis (setelah login)
+
+```powershell
+cd c:\Users\USER\project
+.\deploy-railway.ps1
+```
+
+### Manual di dashboard Railway
+
+1. **New Project** → **Deploy from GitHub repo** → pilih repo `kuesioner-sus-smart-library`
+2. **Settings** → **Build Command:** `pip install -r requirements.txt`
+3. **Settings** → **Start Command:** `gunicorn app:app` (atau biarkan `railway.json` / `nixpacks.toml`)
+4. **Variables:**
+   - `SECRET_KEY` = string acak panjang
+   - `DATA_DIR` = `/data` (jika memakai Volume)
+5. **Volumes** (Free Tier): mount path `/data`, size 1 GB — agar CSV tidak hilang saat redeploy
+6. **Networking** → **Generate Domain**
+
+### Optimasi Free Tier
+
+- Python 3.11.9 via `runtime.txt`
+- Gunicorn: 1 worker, 2 threads (`nixpacks.toml` / `railway.json`)
+- Restart on failure, healthcheck `/`
