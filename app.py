@@ -61,28 +61,28 @@ ASPEK = [
 PERTANYAAN_MAHASISWA = [
     # Aspek 1: Fungsionalitas Sistem
     "Sistem dapat membaca KTM ITK saya dengan benar saat ditempelkan pada RFID reader.",
-    "Sistem berhasil mendeteksi buku yang saya pinjam/kembalikan melalui tag RFID.",
-    "Proses peminjaman buku melalui sistem RFID berjalan sesuai dengan yang diharapkan.",
-    "Proses pengembalian buku melalui sistem RFID berfungsi dengan baik tanpa kendala.",
+    "Sistem berhasil mendeteksi buku melalui tag RFID yang tertanam pada buku.",
+    "Proses identifikasi KTM dan buku oleh sistem RFID berjalan sesuai dengan yang diharapkan.",
+    "Sistem berhasil menampilkan data buku dan identitas mahasiswa setelah proses pemindaian.",
     # Aspek 2: Keandalan Sistem
-    "Sistem tidak mengalami error atau kegagalan saat saya melakukan peminjaman atau pengembalian buku.",
+    "Sistem tidak mengalami error atau kegagalan saat saya melakukan pemindaian KTM maupun buku.",
     "KTM saya selalu berhasil terbaca setiap kali ditempelkan pada reader tanpa perlu mengulang.",
     "Tag RFID buku selalu terdeteksi secara konsisten oleh sistem saat proses pemindaian.",
     "Sistem tetap berjalan stabil meskipun saya menggunakannya berulang kali dalam satu sesi.",
     # Aspek 3: Kemudahan Penggunaan
     "Saya dapat menggunakan sistem Smart Library RFID tanpa memerlukan bantuan orang lain.",
-    "Langkah-langkah peminjaman dan pengembalian buku mudah dipahami dan diikuti.",
+    "Langkah-langkah penggunaan sistem pemantauan mudah dipahami dan diikuti.",
     "Saya tidak merasa kesulitan saat pertama kali menggunakan sistem ini.",
     "Secara keseluruhan, sistem ini mudah dioperasikan oleh mahasiswa.",
     # Aspek 4: Kejelasan Antarmuka
     "Informasi yang ditampilkan pada layar sistem jelas dan mudah dibaca.",
     "Pesan konfirmasi dan notifikasi pada sistem mudah dipahami.",
-    "Status peminjaman dan pengembalian buku ditampilkan dengan jelas di antarmuka.",
+    "Hasil pemantauan dan identifikasi buku ditampilkan dengan jelas di antarmuka.",
     "Pesan kesalahan yang muncul saat terjadi error memberikan informasi yang cukup jelas.",
     # Aspek 5: Kesesuaian Kebutuhan
-    "Sistem Smart Library RFID membantu mempermudah proses peminjaman buku di perpustakaan.",
+    "Sistem Smart Library RFID membantu mempermudah proses pemantauan buku di perpustakaan.",
     "Sistem ini sesuai dengan kebutuhan saya sebagai mahasiswa dalam mengakses layanan perpustakaan.",
-    "Penggunaan RFID membuat proses di perpustakaan lebih cepat dibandingkan cara manual.",
+    "Penggunaan RFID membuat proses identifikasi buku lebih cepat dibandingkan cara manual.",
     "Secara keseluruhan, sistem ini memenuhi harapan saya terhadap layanan perpustakaan modern.",
 ]
 
@@ -90,13 +90,13 @@ PERTANYAAN_PUSTAKAWAN = [
     # Aspek 1: Fungsionalitas Sistem
     "Sistem dapat membaca UID KTM mahasiswa dengan benar dan menampilkan data yang sesuai.",
     "Sistem berhasil mendeteksi dan mengidentifikasi tag RFID buku sesuai data di database.",
-    "Proses pencatatan transaksi peminjaman oleh sistem berjalan sesuai fungsinya.",
-    "Proses pencatatan transaksi pengembalian oleh sistem berjalan sesuai fungsinya.",
+    "Proses pencatatan data pemantauan buku oleh sistem berjalan sesuai fungsinya.",
+    "Sistem berhasil mencatat log aktivitas identifikasi KTM dan buku secara otomatis.",
     # Aspek 2: Keandalan Sistem
-    "Sistem tidak mengalami error atau crash saat digunakan secara berulang sepanjang hari.",
+    "Sistem tidak mengalami error atau crash saat digunakan secara berulang dalam satu sesi pengujian.",
     "HF RFID Reader membaca KTM secara konsisten tanpa kegagalan pembacaan.",
     "UHF RFID Reader mendeteksi tag buku secara konsisten pada setiap pemindaian.",
-    "Data transaksi yang dicatat oleh sistem selalu akurat dan tidak ada data yang hilang.",
+    "Data pemantauan yang dicatat oleh sistem selalu akurat dan tidak ada data yang hilang.",
     # Aspek 3: Kemudahan Penggunaan
     "Saya dapat mengoperasikan sistem Smart Library RFID tanpa kesulitan berarti.",
     "Menu dan fitur pada modul pustakawan mudah ditemukan dan diakses.",
@@ -104,14 +104,14 @@ PERTANYAAN_PUSTAKAWAN = [
     "Secara keseluruhan, sistem ini mudah digunakan dalam operasional perpustakaan sehari-hari.",
     # Aspek 4: Kejelasan Antarmuka
     "Data mahasiswa dan buku ditampilkan dengan jelas pada dashboard pustakawan.",
-    "Laporan transaksi dan ringkasan data mudah dibaca dan dipahami.",
-    "Informasi status buku (tersedia/dipinjam) terlihat jelas pada antarmuka sistem.",
+    "Laporan pemantauan dan ringkasan data mudah dibaca dan dipahami.",
+    "Informasi status identifikasi buku terlihat jelas pada antarmuka sistem.",
     "Pesan error dan notifikasi sistem memberikan informasi yang mudah ditindaklanjuti.",
     # Aspek 5: Kesesuaian Kebutuhan
-    "Sistem Smart Library RFID membantu meningkatkan efisiensi layanan sirkulasi perpustakaan.",
+    "Sistem Smart Library RFID membantu meningkatkan efisiensi pemantauan koleksi perpustakaan.",
     "Fitur-fitur yang tersedia sesuai dengan kebutuhan operasional pustakawan.",
-    "Sistem ini mengurangi pekerjaan manual dan mempercepat proses layanan.",
-    "Secara keseluruhan, sistem ini memenuhi kebutuhan perpustakaan dalam mengelola peminjaman dan pengembalian buku.",
+    "Sistem ini mengurangi pekerjaan manual dan mempercepat proses pemantauan.",
+    "Secara keseluruhan, sistem ini memenuhi kebutuhan perpustakaan dalam memantau dan mengidentifikasi koleksi buku.",
 ]
 
 def get_pertanyaan(role):
